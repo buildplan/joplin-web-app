@@ -2,6 +2,9 @@ name: Build and deploy to pages
 
 on:
   workflow_dispatch:
+  schedule:
+    # Run daily at midnight to pick up any new upstream Joplin releases
+    - cron: '0 0 * * *'
 
 # GITHUB_TOKEN permssions for deploying to pages
 permissions:
