@@ -17,11 +17,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.artifact.outputs.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -59,10 +58,24 @@ jobs:
           cp -r packages/app-mobile/web/dist/ pages/
       - name: Setup Pages
         uses: actions/configure-pages@v6
+      - name: Set artifact name
+        id: artifact
+        run: echo "name=github-pages-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_OUTPUT"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
+          name: ${{ steps.artifact.outputs.name }}
           path: 'pages/'
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: ${{ needs.build.outputs.artifact_name }}
